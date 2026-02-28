@@ -6,14 +6,13 @@ from src.database.database import DatabaseManager
 
 
 class RegistrationWindow(QMainWindow):
-    # Сигналы для переключения окон
     back_to_login_requested = pyqtSignal()
     registration_successful = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, db_manager: DatabaseManager):
         super().__init__()
         loadUi("src/client/ui/registration.ui", self)
-        self.db_manager = DatabaseManager()
+        self.db_manager = db_manager
 
         self.registerButton.clicked.connect(self.handle_registration)
         self.backButton.clicked.connect(self.back_to_login_requested.emit)
@@ -36,7 +35,3 @@ class RegistrationWindow(QMainWindow):
             self.registration_successful.emit()
         else:
             QMessageBox.warning(self, "Ошибка", "Пользователь с таким именем уже существует.")
-
-    def closeEvent(self, event):
-        self.db_manager.close()
-        super().closeEvent(event)

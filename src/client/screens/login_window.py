@@ -6,14 +6,13 @@ from src.database.database import DatabaseManager
 
 
 class LoginWindow(QMainWindow):
-    # Сигнал теперь передает ID пользователя
     login_successful = pyqtSignal(int)
     show_registration_requested = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, db_manager: DatabaseManager):
         super().__init__()
         loadUi("src/client/ui/login.ui", self)
-        self.db_manager = DatabaseManager()
+        self.db_manager = db_manager
 
         self.loginButton.clicked.connect(self.handle_login)
         self.registerButton.clicked.connect(self.show_registration_requested.emit)
@@ -27,7 +26,3 @@ class LoginWindow(QMainWindow):
             self.login_successful.emit(user_id)
         else:
             QMessageBox.warning(self, "Ошибка входа", "Неверное имя пользователя или пароль.")
-
-    def closeEvent(self, event):
-        self.db_manager.close()
-        super().closeEvent(event)

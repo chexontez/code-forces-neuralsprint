@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QTableWidgetItem, QDialog, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QDialog, QTableWidgetItem, QFileDialog, QMessageBox
 from PyQt6.uic import loadUi
 import datetime
 
@@ -8,14 +8,14 @@ from src.utils.pdf_generator import generate_pdf_report
 
 class StatisticsWindow(QDialog):
     def __init__(self, user_id, db_manager: DatabaseManager, parent=None):
-        super().__init__(parent)
+        super().__init__(parent) # <-- Устанавливаем родителя
         loadUi("src/client/ui/statistics_window.ui", self)
 
         self.user_id = user_id
         self.db_manager = db_manager
-        self.results = [] # Сохраняем результаты для экспорта
+        self.results = []
 
-        self.closeButton.clicked.connect(self.accept)
+        self.closeButton.clicked.connect(self.accept) # Для QDialog лучше использовать accept/reject
         self.exportPdfButton.clicked.connect(self.export_to_pdf)
         self.load_statistics()
 
@@ -34,11 +34,9 @@ class StatisticsWindow(QDialog):
             
     def export_to_pdf(self):
         """Открывает диалог сохранения и генерирует PDF."""
-        # Получаем имя пользователя (хотя в идеале его надо передавать)
         username_cursor = self.db_manager.cursor.execute("SELECT username FROM users WHERE id = ?", (self.user_id,))
         username = username_cursor.fetchone()[0] or "Unknown"
 
-        # Диалог сохранения файла
         filepath, _ = QFileDialog.getSaveFileName(self, "Сохранить отчет", f"{username}_report.pdf", "PDF Files (*.pdf)")
 
         if filepath:
