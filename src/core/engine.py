@@ -41,7 +41,6 @@ class TestEngine(QObject):
         self.is_running = False
         self.timer.stop()
 
-        # Если тест прервали, когда нужно было нажать, засчитываем пропуск
         if self.current_stimulus == "go":
             self.results["missed_go"] += 1
 
@@ -64,7 +63,20 @@ class TestEngine(QObject):
         self.color_changed.emit("green")
         self.current_stimulus = "go"
         self.stimulus_start_time = QDateTime.currentMSecsSinceEpoch()
-        # Больше нет таймера, который сбрасывает зеленый цвет
+        # Возвращаем таймер, который сбрасывает зеленый цвет
+        QTimer.singleShot(1500, self.reset_to_no_go)
+
+    def reset_to_no_go(self):
+        """Возвращает стимул в состояние No-Go, если не было реакции."""
+        if not self.is_running or self.current_stimulus != "go":
+            return
+
+        self.results["missed_go"] += 1
+        print("Пропуск Go-стимула!")
+
+        self.color_changed.emit("red")
+        self.current_stimulus = "no-go"
+        self.schedule_next_go()
 
     def record_reaction(self):
         if not self.is_running:
@@ -75,7 +87,7 @@ class TestEngine(QObject):
             self.results["reaction_times"].append(reaction_time)
             print(f"Верное нажатие! Время реакции: {reaction_time} мс")
 
-            # Сразу возвращаемся к красному и планируем следующий
+            self.timer.stop() # Останавливаем таймер, который бы вызвал reset_to_no_go
             self.color_changed.emit("red")
             self.current_stimulus = "no-go"
             self.schedule_next_go()
