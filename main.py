@@ -9,11 +9,14 @@ from src.client.screens.main_window import MainWindow
 class WindowManager:
     """Класс для управления окнами"""
     def __init__(self):
+        self.current_user_id = None
+        
         self.login_window = LoginWindow()
         self.registration_window = RegistrationWindow()
-        self.main_window = MainWindow()
+        # MainWindow теперь создается при необходимости
+        self.main_window = None
 
-        # Настраиваем переходы между окнами через сигналы
+        # Настраиваем переходы
         self.login_window.show_registration_requested.connect(self.show_registration)
         self.login_window.login_successful.connect(self.show_main)
         
@@ -21,15 +24,21 @@ class WindowManager:
         self.registration_window.registration_successful.connect(self.show_login)
 
     def show_login(self):
+        if self.main_window:
+            self.main_window.hide()
         self.registration_window.hide()
-        self.main_window.hide()
         self.login_window.show()
 
     def show_registration(self):
         self.login_window.hide()
         self.registration_window.show()
 
-    def show_main(self):
+    def show_main(self, user_id):
+        self.current_user_id = user_id
+        print(f"Пользователь {self.current_user_id} вошел в систему.")
+        
+        # Создаем MainWindow с ID пользователя
+        self.main_window = MainWindow(user_id=self.current_user_id)
         self.login_window.hide()
         self.main_window.show()
 
