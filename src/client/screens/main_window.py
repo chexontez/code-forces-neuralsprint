@@ -79,7 +79,9 @@ class MainWindow(QMainWindow):
         self.resultsTextEdit.setText(text)
 
     def show_about_dialog(self):
-        QMessageBox.about(self, "О приложении", "NeuroSprint v1.0")
+        QMessageBox.about(self, "О приложении",
+                          "    NeuroSprint - тренажер для развития скорости реакции.    \n\n"
+                          "Версия 1.0\n")
 
     def show_statistics(self):
         """Открывает окно статистики."""
