@@ -1,17 +1,25 @@
 from fpdf import FPDF
 import datetime
+import os
 
 class PDF(FPDF):
     def header(self):
-        self.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+        # Путь к шрифту относительно корня проекта
+        font_path = os.path.join('assets', 'fonts', 'DejaVuSans.ttf')
+        self.add_font('DejaVu', '', font_path, uni=True)
         self.set_font('DejaVu', '', 12)
         self.cell(0, 10, 'Отчет о тренировках NeuroSprint', 0, 1, 'C')
         self.ln(10)
 
     def footer(self):
         self.set_y(-15)
-        self.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
-        self.set_font('DejaVu', '', 8)
+        font_path = os.path.join('assets', 'fonts', 'DejaVuSans.ttf')
+        # Проверяем, был ли шрифт уже добавлен
+        try:
+            self.set_font('DejaVu', '', 8)
+        except RuntimeError:
+            self.add_font('DejaVu', '', font_path, uni=True)
+            self.set_font('DejaVu', '', 8)
         self.cell(0, 10, f'Страница {self.page_no()}', 0, 0, 'C')
 
 def generate_pdf_report(username: str, results: list, filepath: str):
@@ -21,16 +29,15 @@ def generate_pdf_report(username: str, results: list, filepath: str):
     pdf = PDF()
     pdf.add_page()
     
-    # Добавляем шрифт, поддерживающий кириллицу
-    pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+    # Путь к шрифту относительно корня проекта
+    font_path = os.path.join('assets', 'fonts', 'DejaVuSans.ttf')
+    pdf.add_font('DejaVu', '', font_path, uni=True)
     pdf.set_font('DejaVu', '', 12)
 
-    # Заголовок с именем пользователя
     pdf.cell(0, 10, f'Пользователь: {username}', 0, 1)
     pdf.cell(0, 10, f'Дата отчета: {datetime.date.today().strftime("%d.%m.%Y")}', 0, 1)
     pdf.ln(10)
 
-    # Заголовки таблицы
     pdf.set_font('DejaVu', '', 10)
     pdf.cell(40, 10, 'Дата', 1)
     pdf.cell(45, 10, 'Ср. время (мс)', 1)
@@ -38,7 +45,6 @@ def generate_pdf_report(username: str, results: list, filepath: str):
     pdf.cell(45, 10, 'Ложн. нажатия', 1)
     pdf.ln()
 
-    # Данные
     if not results:
         pdf.cell(0, 10, 'Нет данных для отображения.', 1, 1)
     else:
