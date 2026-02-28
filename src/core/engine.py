@@ -1,6 +1,8 @@
 import random
 from PyQt6.QtCore import QTimer, pyqtSignal, QObject, QDateTime
 
+from src.core.analytics import calculate_variability, calculate_accuracy
+
 
 class TestEngine(QObject):
     color_changed = pyqtSignal(str)
@@ -25,7 +27,6 @@ class TestEngine(QObject):
         if self.is_running:
             return
 
-        print("Тест начат!")
         self.is_running = True
         self.stimuli_count = 0
         self.results = {"reaction_times": [], "missed_go": 0, "false_alarms": 0}
@@ -39,12 +40,15 @@ class TestEngine(QObject):
         if not self.is_running:
             return
 
-        print("Тест завершен!")
         self.is_running = False
         self.timer.stop()
 
         if self.current_stimulus == "go":
             self.results["missed_go"] += 1
+            
+        # Рассчитываем финальные метрики
+        self.results["variability"] = calculate_variability(self.results["reaction_times"])
+        self.results["accuracy"] = calculate_accuracy(self.results, self.max_stimuli)
 
         self.color_changed.emit("white")
         self.test_finished.emit(self.results)
@@ -54,7 +58,6 @@ class TestEngine(QObject):
             if self.is_running:
                 self.stop_test()
             return
-        # Случайный интервал от 1 до 4 секунд
         delay = random.randint(1000, 4000)
         self.timer.start(delay)
 
@@ -73,8 +76,6 @@ class TestEngine(QObject):
             return
 
         self.results["missed_go"] += 1
-        print("Пропуск Go-стимула!")
-
         self.color_changed.emit("red")
         self.current_stimulus = "no-go"
         self.schedule_next_go()
@@ -86,7 +87,6 @@ class TestEngine(QObject):
         if self.current_stimulus == "go":
             reaction_time = QDateTime.currentMSecsSinceEpoch() - self.stimulus_start_time
             self.results["reaction_times"].append(reaction_time)
-            print(f"Верное нажатие! Время реакции: {reaction_time} мс")
 
             self.timer.stop()
             self.color_changed.emit("red")
@@ -95,4 +95,3 @@ class TestEngine(QObject):
 
         elif self.current_stimulus == "no-go":
             self.results["false_alarms"] += 1
-            print("Ошибка! Нажатие на No-Go стимул (красный).")

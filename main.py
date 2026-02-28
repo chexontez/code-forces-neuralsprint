@@ -4,16 +4,18 @@ from PyQt6.QtWidgets import QApplication
 from src.client.screens.login_window import LoginWindow
 from src.client.screens.registration_window import RegistrationWindow
 from src.client.screens.main_window import MainWindow
+from src.database.database import DatabaseManager
 
 
 class WindowManager:
-    """Класс для управления окнами"""
+    """Класс для управления окнами и общими ресурсами"""
     def __init__(self):
         self.current_user_id = None
+        self.db_manager = DatabaseManager()  # <-- Единый экземпляр
         
-        self.login_window = LoginWindow()
-        self.registration_window = RegistrationWindow()
-        # MainWindow теперь создается при необходимости
+        # Передаем менеджер в конструкторы
+        self.login_window = LoginWindow(self.db_manager)
+        self.registration_window = RegistrationWindow(self.db_manager)
         self.main_window = None
 
         # Настраиваем переходы
@@ -24,8 +26,7 @@ class WindowManager:
         self.registration_window.registration_successful.connect(self.show_login)
 
     def show_login(self):
-        if self.main_window:
-            self.main_window.hide()
+        if self.main_window: self.main_window.hide()
         self.registration_window.hide()
         self.login_window.show()
 
@@ -35,16 +36,22 @@ class WindowManager:
 
     def show_main(self, user_id):
         self.current_user_id = user_id
-        print(f"Пользователь {self.current_user_id} вошел в систему.")
-        
-        # Создаем MainWindow с ID пользователя
-        self.main_window = MainWindow(user_id=self.current_user_id)
+        # Передаем ID и менеджер в MainWindow
+        self.main_window = MainWindow(user_id=self.current_user_id, db_manager=self.db_manager)
         self.login_window.hide()
         self.main_window.show()
+        
+    def cleanup(self):
+        """Закрывает все ресурсы перед выходом."""
+        self.db_manager.close()
+        print("Соединение с БД закрыто.")
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     manager = WindowManager()
     manager.show_login()
-    sys.exit(app.exec())
+    
+    exit_code = app.exec()
+    manager.cleanup()  # <-- Закрываем соединение здесь
+    sys.exit(exit_code)

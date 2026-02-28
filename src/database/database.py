@@ -10,14 +10,7 @@ class DatabaseManager:
         self.setup_database()
 
     def setup_database(self):
-        """Создает таблицы, если они не существуют."""
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL
-            )
-        """)
+        # Сначала создаем основную структуру таблицы
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS test_results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,50 +22,57 @@ class DatabaseManager:
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         """)
+        
+        # Теперь проверяем и добавляем новые колонки, если их нет
+        self.cursor.execute("PRAGMA table_info(test_results)")
+        columns = [info[1] for info in self.cursor.fetchall()]
+        if 'variability' not in columns:
+            self.cursor.execute("ALTER TABLE test_results ADD COLUMN variability REAL")
+        if 'accuracy' not in columns:
+            self.cursor.execute("ALTER TABLE test_results ADD COLUMN accuracy REAL")
+
+        # Таблица пользователей
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL
+            )
+        """)
         self.conn.commit()
 
     def _hash_password(self, password):
-        """Хэширует пароль."""
         return hashlib.sha256(password.encode()).hexdigest()
 
     def add_user(self, username, password):
-        """Добавляет нового пользователя. Возвращает True/False."""
-        if not username or not password:
-            return False
-        password_hash = self._hash_password(password)
+        if not username or not password: return False
         try:
             self.cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                              (username, password_hash))
+                              (username, self._hash_password(password)))
             self.conn.commit()
             return True
         except sqlite3.IntegrityError:
             return False
 
     def check_user(self, username, password):
-        """Проверяет учетные данные. Возвращает user_id или None."""
         password_hash = self._hash_password(password)
         self.cursor.execute("SELECT id, password_hash FROM users WHERE username = ?", (username,))
         result = self.cursor.fetchone()
-        if result and result[1] == password_hash:
-            return result[0]  # Возвращаем user_id
-        return None
+        return result[0] if result and result[1] == password_hash else None
 
     def add_test_result(self, user_id, results):
-        """Добавляет результат теста в БД."""
         date = datetime.datetime.now().isoformat()
         avg_rt = sum(results['reaction_times']) / len(results['reaction_times']) if results['reaction_times'] else 0
         
         self.cursor.execute("""
-            INSERT INTO test_results (user_id, test_date, avg_reaction_time, missed_go, false_alarms)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user_id, date, avg_rt, results['missed_go'], results['false_alarms']))
+            INSERT INTO test_results (user_id, test_date, avg_reaction_time, missed_go, false_alarms, variability, accuracy)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, date, avg_rt, results['missed_go'], results['false_alarms'], results.get('variability', 0), results.get('accuracy', 0)))
         self.conn.commit()
-        print(f"Результат для пользователя {user_id} сохранен.")
 
     def get_test_results(self, user_id):
-        """Возвращает историю тестов для указанного пользователя."""
         self.cursor.execute("""
-            SELECT test_date, avg_reaction_time, missed_go, false_alarms 
+            SELECT test_date, avg_reaction_time, missed_go, false_alarms, variability, accuracy 
             FROM test_results 
             WHERE user_id = ? 
             ORDER BY test_date DESC
@@ -80,5 +80,4 @@ class DatabaseManager:
         return self.cursor.fetchall()
 
     def close(self):
-        """Закрывает соединение с БД."""
         self.conn.close()

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>StatisticsWindow</class>
- <widget class="QWidget" name="StatisticsWindow">
+ <widget class="QDialog" name="StatisticsWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>800</width>
     <height>400</height>
    </rect>
   </property>
@@ -47,17 +47,27 @@
      </column>
      <column>
       <property name="text">
-       <string>Среднее время реакции (мс)</string>
+       <string>Ср. время реакции (мс)</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Пропуски (Go)</string>
+       <string>Вариативность (мс)</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Ложные нажатия (No-Go)</string>
+       <string>Точность (%)</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Пропуски</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Ложн. нажатия</string>
       </property>
      </column>
     </widget>
