@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход - NeuroSprint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>NeuroSprint</h1>
+        <form action="{{ url_for('index') }}" method="post">
+            <input type="text" name="username" placeholder="Имя пользователя" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+            <div class="button-group">
+                <button type="submit">Войти</button>
+                <button type="button" onclick="location.href='{{ url_for('register_page') }}'">Регистрация</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

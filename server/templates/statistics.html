@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Статистика - NeuroSprint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="stats-container">
+        <div class="stats-column">
+            <h2>Ваша статистика ({{ current_user.username }})</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Ср. время (мс)</th>
+                        <th>Пропуски</th>
+                        <th>Ложн. нажатия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in current_user_stats %}
+                    <tr>
+                        <td>{{ row.date }}</td>
+                        <td>{{ "%.2f"|format(row.avg_rt) }}</td>
+                        <td>{{ row.missed }}</td>
+                        <td>{{ row.false_alarms }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4">Нет данных</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="stats-column">
+            <h2>Сравнение</h2>
+            <form method="get" class="compare-form">
+                <select name="compare_user_id" onchange="this.form.submit()">
+                    <option value="">Выберите пользователя...</option>
+                    {% for user in all_users %}
+                        <option value="{{ user.id }}" {% if compare_user and user.id == compare_user.id %}selected{% endif %}>
+                            {{ user.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            {% if compare_user %}
+            <h3>Статистика ({{ compare_user.username }})</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Ср. время (мс)</th>
+                        <th>Пропуски</th>
+                        <th>Ложн. нажатия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in compare_user_stats %}
+                    <tr>
+                        <td>{{ row.date }}</td>
+                        <td>{{ "%.2f"|format(row.avg_rt) }}</td>
+                        <td>{{ row.missed }}</td>
+                        <td>{{ row.false_alarms }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4">Нет данных</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+    <a href="{{ url_for('logout') }}" class="logout-link">Выйти</a>
+</body>
+</html>

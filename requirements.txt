@@ -1,2 +1,4 @@
 PyQt6
 fpdf2
+Flask
+requests

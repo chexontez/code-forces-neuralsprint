@@ -1,18 +1,17 @@
 from PyQt6.QtWidgets import QMainWindow, QMessageBox
 from PyQt6.uic import loadUi
 from PyQt6.QtCore import pyqtSignal
-
-from src.database.database import DatabaseManager
-
+import requests
 
 class RegistrationWindow(QMainWindow):
     back_to_login_requested = pyqtSignal()
     registration_successful = pyqtSignal()
 
-    def __init__(self, db_manager: DatabaseManager):
+    def __init__(self):
         super().__init__()
         loadUi("src/client/ui/registration.ui", self)
-        self.db_manager = db_manager
+        
+        self.server_url = "http://localhost:5000"
 
         self.registerButton.clicked.connect(self.handle_registration)
         self.backButton.clicked.connect(self.back_to_login_requested.emit)
@@ -30,8 +29,21 @@ class RegistrationWindow(QMainWindow):
             QMessageBox.warning(self, "Ошибка", "Пароли не совпадают.")
             return
 
-        if self.db_manager.add_user(username, password):
-            QMessageBox.information(self, "Успех", "Регистрация прошла успешно! Теперь вы можете войти.")
-            self.registration_successful.emit()
-        else:
-            QMessageBox.warning(self, "Ошибка", "Пользователь с таким именем уже существует.")
+        try:
+            response = requests.post(f"{self.server_url}/register", 
+                                     json={"username": username, "password": password},
+                                     timeout=5)
+            
+            if response.status_code == 201: # Created
+                QMessageBox.information(self, "Успех", "Регистрация прошла успешно! Теперь вы можете войти.")
+                self.registration_successful.emit()
+            elif response.status_code == 409: # Conflict
+                QMessageBox.warning(self, "Ошибка", "Пользователь с таким именем уже существует.")
+            else:
+                QMessageBox.critical(self, "Ошибка сервера", f"Сервер вернул ошибку: {response.status_code}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка подключения к серверу: {e}")
+            QMessageBox.critical(self, "Ошибка подключения", 
+                                 "Не удалось подключиться к серверу.\n"
+                                 "Убедитесь, что сервер запущен.")
