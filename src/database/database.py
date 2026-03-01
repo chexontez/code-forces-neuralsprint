@@ -23,11 +23,14 @@ class DatabaseManager:
         return result[0] if result else None
 
     def cache_user(self, username, password, user_id):
-        """Сохраняет или обновляет пользователя в локальном кэше."""
         password_hash = self._hash_password(password)
-        self.cursor.execute("REPLACE INTO users (id, username, password_hash) VALUES (?, ?, ?)",
-                              (user_id, username, password_hash))
+        self.cursor.execute("REPLACE INTO users (id, username, password_hash) VALUES (?, ?, ?)", (user_id, username, password_hash))
         self.conn.commit()
+
+    def get_username_by_id(self, user_id):
+        self.cursor.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
 
     def add_test_result(self, user_id, results):
         date = datetime.datetime.now().isoformat()

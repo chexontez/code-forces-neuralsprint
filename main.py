@@ -1,4 +1,5 @@
 import sys
+import datetime
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 
@@ -6,6 +7,7 @@ from src.client.screens.login_window import LoginWindow
 from src.client.screens.registration_window import RegistrationWindow
 from src.client.screens.main_window import MainWindow
 from src.database.database import DatabaseManager
+from src.utils.pdf_generator import generate_pdf_report # <-- Импортируем генератор
 
 class WindowManager:
     def __init__(self):
@@ -13,7 +15,6 @@ class WindowManager:
         self.local_db_manager = DatabaseManager()
         self.app_icon = QIcon("assets/images/neuralsprint.png")
 
-        # Снова передаем db_manager в LoginWindow
         self.login_window = LoginWindow(self.local_db_manager)
         self.login_window.setWindowIcon(self.app_icon)
         
@@ -45,7 +46,23 @@ class WindowManager:
         self.main_window.show()
         
     def cleanup(self):
+        """Выполняется перед закрытием: сохраняет отчет и закрывает БД."""
+        if self.current_user_id:
+            print("Создание автоматического PDF-отчета...")
+            try:
+                username = self.local_db_manager.get_username_by_id(self.current_user_id) or "unknown_user"
+                results = self.local_db_manager.get_test_results(self.current_user_id)
+                
+                if results:
+                    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                    filepath = f"pdf/log_{now}.pdf"
+                    generate_pdf_report(username, results, filepath)
+                    print(f"Отчет для {username} сохранен в {filepath}")
+            except Exception as e:
+                print(f"Не удалось создать PDF-отчет: {e}")
+
         self.local_db_manager.close()
+        print("Соединение с локальной БД закрыто.")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

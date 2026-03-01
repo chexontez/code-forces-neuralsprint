@@ -1,17 +1,16 @@
 from flask import Flask, jsonify, request, render_template, redirect, url_for, session
 from database import ServerDatabaseManager
 import os
+import datetime
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 db = ServerDatabaseManager()
 
-# --- Веб-страницы ---
-
+# --- Веб-страницы (без изменений) ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if 'user_id' in session:
-        return redirect(url_for('stats_page'))
+    if 'user_id' in session: return redirect(url_for('stats_page'))
     if request.method == 'POST':
         user = db.get_user_by_username(request.form['username'])
         if user and user['password_hash'] == db._hash_password(request.form['password']):
@@ -35,6 +34,7 @@ def register_page():
 
 @app.route('/stats')
 def stats_page():
+    # ... (код страницы статистики)
     if 'user_id' not in session: return redirect(url_for('index'))
     current_user = db.get_user_by_id(session['user_id'])
     current_user_stats = db.get_test_results(session['user_id'])
@@ -45,12 +45,7 @@ def stats_page():
     if compare_user_id:
         compare_user = db.get_user_by_id(compare_user_id)
         compare_user_stats = db.get_test_results(compare_user_id)
-    return render_template('statistics.html', 
-                           current_user=current_user,
-                           current_user_stats=current_user_stats,
-                           all_users=all_users,
-                           compare_user=compare_user,
-                           compare_user_stats=compare_user_stats)
+    return render_template('statistics.html', current_user=current_user, current_user_stats=current_user_stats, all_users=all_users, compare_user=compare_user, compare_user_stats=compare_user_stats)
 
 @app.route('/logout')
 def logout():
@@ -73,6 +68,19 @@ def api_register():
     if db.add_user(data.get('username'), data.get('password')):
         return jsonify({"success": True}), 201
     return jsonify({"success": False, "message": "Пользователь уже существует"}), 409
+
+@app.route('/api/save_result', methods=['POST'])
+def api_save_result():
+    """API для сохранения результата теста от клиента."""
+    data = request.get_json()
+    user_id = data.get('user_id')
+    results = data.get('results')
+    if not user_id or not results:
+        return jsonify({"success": False, "message": "Отсутствуют данные"}), 400
+    
+    # Используем метод из database.py для сохранения
+    db.add_test_result(user_id, results)
+    return jsonify({"success": True}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

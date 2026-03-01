@@ -22,8 +22,8 @@
                     {% for row in current_user_stats %}
                     <tr>
                         <td>{{ row.date }}</td>
-                        <td>{{ "%.2f"|format(row.avg_rt) }}</td>
-                        <td>{{ row.missed }}</td>
+                        <td>{{ "%.2f"|format(row.avg_reaction_time) }}</td>
+                        <td>{{ row.missed_go }}</td>
                         <td>{{ row.false_alarms }}</td>
                     </tr>
                     {% else %}
@@ -61,8 +61,8 @@
                     {% for row in compare_user_stats %}
                     <tr>
                         <td>{{ row.date }}</td>
-                        <td>{{ "%.2f"|format(row.avg_rt) }}</td>
-                        <td>{{ row.missed }}</td>
+                        <td>{{ "%.2f"|format(row.avg_reaction_time) }}</td>
+                        <td>{{ row.missed_go }}</td>
                         <td>{{ row.false_alarms }}</td>
                     </tr>
                     {% else %}
