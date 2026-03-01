@@ -7,7 +7,7 @@ from src.client.screens.login_window import LoginWindow
 from src.client.screens.registration_window import RegistrationWindow
 from src.client.screens.main_window import MainWindow
 from src.database.database import DatabaseManager
-from src.utils.pdf_generator import generate_pdf_report # <-- Импортируем генератор
+from src.utils.pdf_generator import generate_pdf_report
 
 class WindowManager:
     def __init__(self):
@@ -55,7 +55,8 @@ class WindowManager:
                 
                 if results:
                     now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                    filepath = f"pdf/log_{now}.pdf"
+                    # Новый путь и формат имени файла
+                    filepath = f"logs/{username}_{now}.pdf"
                     generate_pdf_report(username, results, filepath)
                     print(f"Отчет для {username} сохранен в {filepath}")
             except Exception as e:
