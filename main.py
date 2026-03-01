@@ -11,13 +11,14 @@ class WindowManager:
     def __init__(self):
         self.current_user_id = None
         self.local_db_manager = DatabaseManager()
-        self.app_icon = QIcon("assets/images/neuralsprint.png") # <-- Загружаем иконку
+        self.app_icon = QIcon("assets/images/neuralsprint.png")
 
-        self.login_window = LoginWindow()
-        self.login_window.setWindowIcon(self.app_icon) # <-- Устанавливаем иконку
+        # Снова передаем db_manager в LoginWindow
+        self.login_window = LoginWindow(self.local_db_manager)
+        self.login_window.setWindowIcon(self.app_icon)
         
         self.registration_window = RegistrationWindow()
-        self.registration_window.setWindowIcon(self.app_icon) # <-- Устанавливаем иконку
+        self.registration_window.setWindowIcon(self.app_icon)
         
         self.main_window = None
 
@@ -39,7 +40,7 @@ class WindowManager:
     def show_main(self, user_id):
         self.current_user_id = user_id
         self.main_window = MainWindow(user_id=self.current_user_id, db_manager=self.local_db_manager)
-        self.main_window.setWindowIcon(self.app_icon) # <-- Устанавливаем иконку
+        self.main_window.setWindowIcon(self.app_icon)
         self.login_window.hide()
         self.main_window.show()
         

@@ -30,20 +30,18 @@ class RegistrationWindow(QMainWindow):
             return
 
         try:
-            response = requests.post(f"{self.server_url}/register", 
+            # Используем правильный URL /api/register
+            response = requests.post(f"{self.server_url}/api/register", 
                                      json={"username": username, "password": password},
                                      timeout=5)
             
-            if response.status_code == 201: # Created
+            if response.status_code == 201:
                 QMessageBox.information(self, "Успех", "Регистрация прошла успешно! Теперь вы можете войти.")
                 self.registration_successful.emit()
-            elif response.status_code == 409: # Conflict
+            elif response.status_code == 409:
                 QMessageBox.warning(self, "Ошибка", "Пользователь с таким именем уже существует.")
             else:
                 QMessageBox.critical(self, "Ошибка сервера", f"Сервер вернул ошибку: {response.status_code}")
 
-        except requests.exceptions.RequestException as e:
-            print(f"Ошибка подключения к серверу: {e}")
-            QMessageBox.critical(self, "Ошибка подключения", 
-                                 "Не удалось подключиться к серверу.\n"
-                                 "Убедитесь, что сервер запущен.")
+        except requests.exceptions.RequestException:
+            QMessageBox.critical(self, "Ошибка подключения", "Не удалось подключиться к серверу для регистрации.")

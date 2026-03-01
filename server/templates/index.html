@@ -1,25 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Neural Sprint - Вход</title>
+    <meta charset="UTF-8">
+    <title>Вход - NeuroSprint</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Neural Sprint</h1>
-        <h2>Тренировка скорости реакции</h2>
-
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
-
-        <form method="post" class="login-form">
+        <h1>NeuroSprint</h1>
+        <form action="{{ url_for('index') }}" method="post">
             <input type="text" name="username" placeholder="Имя пользователя" required>
             <input type="password" name="password" placeholder="Пароль" required>
-            <button type="submit">Вход</button>
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+            <div class="button-group">
+                <button type="submit">Войти</button>
+                <button type="button" onclick="location.href='{{ url_for('register_page') }}'">Регистрация</button>
+            </div>
         </form>
-
-        <p>Нет аккаунта? <a href="{{ url_for('register_page') }}">Зарегистрироваться</a></p>
     </div>
 </body>
 </html>
